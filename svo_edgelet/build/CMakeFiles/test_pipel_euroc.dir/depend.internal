@@ -23,7 +23,7 @@ CMakeFiles/test_pipel_euroc.dir/test/test_pipel_euroc.cpp.o
  ../include/svo/reprojector.h
  ../include/svo/ringbuffer.h
  ../include/svo/slamviewer.h
- /home/my/Workspace/svo_edgelet/svo_edgelet/test/test_pipel_euroc.cpp
+ /home/my/Workspace/Learn_vSLAM_OpenSource_Code/svo_edgelet/test/test_pipel_euroc.cpp
  /usr/include/eigen3/Eigen/Cholesky
  /usr/include/eigen3/Eigen/Core
  /usr/include/eigen3/Eigen/Dense

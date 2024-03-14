@@ -230,7 +230,7 @@ svo/frame.h
 mutex
 -
 
-/home/my/Workspace/svo_edgelet/svo_edgelet/test/test_pipel_euroc.cpp
+/home/my/Workspace/Learn_vSLAM_OpenSource_Code/svo_edgelet/test/test_pipel_euroc.cpp
 svo/config.h
 -
 svo/frame_handler_mono.h

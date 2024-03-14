@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/my/Workspace/svo_edgelet/svo_edgelet
+CMAKE_SOURCE_DIR = /home/my/Workspace/Learn_vSLAM_OpenSource_Code/svo_edgelet
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/my/Workspace/svo_edgelet/svo_edgelet/build
+CMAKE_BINARY_DIR = /home/my/Workspace/Learn_vSLAM_OpenSource_Code/svo_edgelet/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/my/Workspace/svo_edgelet/svo_edgelet/build/CMakeFiles /home/my/Workspace/svo_edgelet/svo_edgelet/build/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/my/Workspace/Learn_vSLAM_OpenSource_Code/svo_edgelet/build/CMakeFiles /home/my/Workspace/Learn_vSLAM_OpenSource_Code/svo_edgelet/build/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/my/Workspace/svo_edgelet/svo_edgelet/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/my/Workspace/Learn_vSLAM_OpenSource_Code/svo_edgelet/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -109,6 +109,19 @@ preinstall/fast:
 depend:
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
+
+#=============================================================================
+# Target rules for targets named test_video
+
+# Build rule for target.
+test_video: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_video
+.PHONY : test_video
+
+# fast build rule for target.
+test_video/fast:
+	$(MAKE) -f CMakeFiles/test_video.dir/build.make CMakeFiles/test_video.dir/build
+.PHONY : test_video/fast
 
 #=============================================================================
 # Target rules for targets named test_live_vo
@@ -891,6 +904,33 @@ test/test_pipeline.cpp.s:
 	$(MAKE) -f CMakeFiles/test_pipeline.dir/build.make CMakeFiles/test_pipeline.dir/test/test_pipeline.cpp.s
 .PHONY : test/test_pipeline.cpp.s
 
+test/test_video.o: test/test_video.cpp.o
+
+.PHONY : test/test_video.o
+
+# target to build an object file
+test/test_video.cpp.o:
+	$(MAKE) -f CMakeFiles/test_video.dir/build.make CMakeFiles/test_video.dir/test/test_video.cpp.o
+.PHONY : test/test_video.cpp.o
+
+test/test_video.i: test/test_video.cpp.i
+
+.PHONY : test/test_video.i
+
+# target to preprocess a source file
+test/test_video.cpp.i:
+	$(MAKE) -f CMakeFiles/test_video.dir/build.make CMakeFiles/test_video.dir/test/test_video.cpp.i
+.PHONY : test/test_video.cpp.i
+
+test/test_video.s: test/test_video.cpp.s
+
+.PHONY : test/test_video.s
+
+# target to generate assembly for a file
+test/test_video.cpp.s:
+	$(MAKE) -f CMakeFiles/test_video.dir/build.make CMakeFiles/test_video.dir/test/test_video.cpp.s
+.PHONY : test/test_video.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -898,6 +938,7 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
+	@echo "... test_video"
 	@echo "... test_live_vo"
 	@echo "... test_pipel_euroc"
 	@echo "... rebuild_cache"
@@ -984,6 +1025,9 @@ help:
 	@echo "... test/test_pipeline.o"
 	@echo "... test/test_pipeline.i"
 	@echo "... test/test_pipeline.s"
+	@echo "... test/test_video.o"
+	@echo "... test/test_video.i"
+	@echo "... test/test_video.s"
 .PHONY : help
 
 

@@ -153,6 +153,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
+  "CMakeFiles/test_video.dir/DependInfo.cmake"
   "CMakeFiles/test_live_vo.dir/DependInfo.cmake"
   "CMakeFiles/test_pipel_euroc.dir/DependInfo.cmake"
   "CMakeFiles/test_pipeline.dir/DependInfo.cmake"

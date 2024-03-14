@@ -6,5 +6,5 @@ CXX_FLAGS = -Wall -D_LINUX -D_REENTRANT -march=native -Wno-unused-variable -Wno-
 
 CXX_DEFINES = -DBOOST_ALL_NO_LIB -DBOOST_ATOMIC_DYN_LINK -DBOOST_SYSTEM_DYN_LINK -DBOOST_THREAD_DYN_LINK -DSVO_DEBUG_OUTPUT -DSVO_TRACE -Dsvo_EXPORTS
 
-CXX_INCLUDES = -I/home/my/Workspace/svo_edgelet/svo_edgelet/include -isystem /usr/include/eigen3 -isystem /usr/local/include/opencv 
+CXX_INCLUDES = -I/home/my/Workspace/Learn_vSLAM_OpenSource_Code/svo_edgelet/include -isystem /usr/include/eigen3 -isystem /usr/local/include/opencv 
 
