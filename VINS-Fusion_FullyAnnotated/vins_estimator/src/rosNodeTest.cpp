@@ -17,9 +17,9 @@
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
-#include "estimator/estimator.h"
-#include "estimator/parameters.h"
-#include "utility/visualization.h"
+#include "estimator/estimator.h"    //Vins核心
+#include "estimator/parameters.h"   //参数管理器
+#include "utility/visualization.h"  //包含可视化节点（主要发布各种Vins估计出来的消息）
 
 Estimator estimator;
 
@@ -29,7 +29,7 @@ queue<sensor_msgs::ImageConstPtr> img0_buf;
 queue<sensor_msgs::ImageConstPtr> img1_buf;
 std::mutex m_buf;
 
-
+//左图放入队列
 void img0_callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
     m_buf.lock();
@@ -37,6 +37,7 @@ void img0_callback(const sensor_msgs::ImageConstPtr &img_msg)
     m_buf.unlock();
 }
 
+//右图放入队列
 void img1_callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
     m_buf.lock();
@@ -44,7 +45,7 @@ void img1_callback(const sensor_msgs::ImageConstPtr &img_msg)
     m_buf.unlock();
 }
 
-
+//ROS格式图像转为CV格式
 cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
 {
     cv_bridge::CvImageConstPtr ptr;
@@ -67,7 +68,9 @@ cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
     return img;
 }
 
-// extract images with same timestamp from two topics
+/**
+ * 从两个图像队列中取出最早的一帧，并从队列删除，双目要求两帧时差不得超过0.003s
+*/
 void sync_process()
 {
     while(1)
@@ -83,6 +86,7 @@ void sync_process()
                 double time0 = img0_buf.front()->header.stamp.toSec();
                 double time1 = img1_buf.front()->header.stamp.toSec();
                 // 0.003s sync tolerance
+                // 双目相机左右图像时差不得超过0.003s
                 if(time0 < time1 - 0.003)
                 {
                     img0_buf.pop();
@@ -95,6 +99,7 @@ void sync_process()
                 }
                 else
                 {
+                    // 提取缓存队列中最早一帧图像，并从队列中删除
                     time = img0_buf.front()->header.stamp.toSec();
                     header = img0_buf.front()->header;
                     image0 = getImageFromMsg(img0_buf.front());
@@ -126,28 +131,32 @@ void sync_process()
                 estimator.inputImage(time, image);
         }
 
-        std::chrono::milliseconds dura(2);
+        std::chrono::milliseconds dura(2);  //线程延时
         std::this_thread::sleep_for(dura);
     }
 }
 
-
+//imu回调函数
 void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
 {
-    double t = imu_msg->header.stamp.toSec();
+    double t = imu_msg->header.stamp.toSec(); //获取该帧数据头的时间戳并转换成秒
+    //线性加速度x,y,z
     double dx = imu_msg->linear_acceleration.x;
     double dy = imu_msg->linear_acceleration.y;
     double dz = imu_msg->linear_acceleration.z;
+    //角速度x,y,z
     double rx = imu_msg->angular_velocity.x;
     double ry = imu_msg->angular_velocity.y;
     double rz = imu_msg->angular_velocity.z;
     Vector3d acc(dx, dy, dz);
     Vector3d gyr(rx, ry, rz);
-    estimator.inputIMU(t, acc, gyr);
+    estimator.inputIMU(t, acc, gyr);//输入估计器
     return;
 }
 
-
+/**
+ * 订阅一帧跟踪的特征点，包括3D坐标、像素坐标、速度，交给estimator处理
+*/
 void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
 {
     map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> featureFrame;
@@ -155,11 +164,14 @@ void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
     {
         int feature_id = feature_msg->channels[0].values[i];
         int camera_id = feature_msg->channels[1].values[i];
+        //3D坐标
         double x = feature_msg->points[i].x;
         double y = feature_msg->points[i].y;
         double z = feature_msg->points[i].z;
+        //像素坐标
         double p_u = feature_msg->channels[2].values[i];
         double p_v = feature_msg->channels[3].values[i];
+        //速度
         double velocity_x = feature_msg->channels[4].values[i];
         double velocity_y = feature_msg->channels[5].values[i];
         if(feature_msg->channels.size() > 5)
@@ -167,19 +179,22 @@ void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
             double gx = feature_msg->channels[6].values[i];
             double gy = feature_msg->channels[7].values[i];
             double gz = feature_msg->channels[8].values[i];
-            pts_gt[feature_id] = Eigen::Vector3d(gx, gy, gz);
+            pts_gt[feature_id] = Eigen::Vector3d(gx, gy, gz); //PTS gt用于调试目的
             //printf("receive pts gt %d %f %f %f\n", feature_id, gx, gy, gz);
         }
         ROS_ASSERT(z == 1);
         Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
         xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
         featureFrame[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
+        //emplace_back能就地通过参数构造对象，不需要拷贝或者移动内存，
+        //相比push_back能更好地避免内存的拷贝与移动，使容器插入元素的性能得到进一步提升。
     }
     double t = feature_msg->header.stamp.toSec();
     estimator.inputFeature(t, featureFrame);
     return;
 }
 
+// 是否重启estimator，并重新设置参数
 void restart_callback(const std_msgs::BoolConstPtr &restart_msg)
 {
     if (restart_msg->data == true)
@@ -191,6 +206,8 @@ void restart_callback(const std_msgs::BoolConstPtr &restart_msg)
     return;
 }
 
+
+//双目下IMU开关
 void imu_switch_callback(const std_msgs::BoolConstPtr &switch_msg)
 {
     if (switch_msg->data == true)
@@ -206,6 +223,7 @@ void imu_switch_callback(const std_msgs::BoolConstPtr &switch_msg)
     return;
 }
 
+//IMU下选择单双目
 void cam_switch_callback(const std_msgs::BoolConstPtr &switch_msg)
 {
     if (switch_msg->data == true)
@@ -223,11 +241,11 @@ void cam_switch_callback(const std_msgs::BoolConstPtr &switch_msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "vins_estimator");
-    ros::NodeHandle n("~");
-    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
+    ros::init(argc, argv, "vins_estimator"); //初始化节点名称
+    ros::NodeHandle n("~");  //创建句柄，通过构造函数指定命名空间，这里的命名空间为/node_namespace/node_name（命名空间为/node_namespace）
+    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);//设置日志打印等级
 
-    if(argc != 2)
+    if(argc != 2)//运行该节点需要带上配置文件
     {
         printf("please intput: rosrun vins vins_node [config file] \n"
                "for example: rosrun vins vins_node "
@@ -238,8 +256,8 @@ int main(int argc, char **argv)
     string config_file = argv[1];
     printf("config_file: %s\n", argv[1]);
 
-    readParameters(config_file);
-    estimator.setParameter();
+    readParameters(config_file);//读取配置文件
+    estimator.setParameter();//根据配置文件的值设置状态估计器参数
 
 #ifdef EIGEN_DONT_PARALLELIZE
     ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
@@ -247,23 +265,34 @@ int main(int argc, char **argv)
 
     ROS_WARN("waiting for image and imu...");
 
-    registerPub(n);
+    registerPub(n); //注册需要发布的主题
+
+    /*******************************ros::Subscriber参数说明*********************************************************/
+    // ros::Subscriber subscribe (const std::string &topic, uint32_t queue_size, void(*fp)(M), const TransportHints &transport_hints=TransportHints())
+    // 第一个参数是订阅话题的名称；
+    // 第二个参数是订阅队列的长度；（如果收到的消息都没来得及处理，那么新消息入队，旧消息就会出队）；
+    // 第三个参数是回调函数的指针，指向回调函数来处理接收到的消息！
+    // 第四个参数：似乎与延迟有关系，暂时不关心。（该成员函数有13重载）
+    /*******************************************************************/
 
     ros::Subscriber sub_imu;
-    if(USE_IMU)
+    if(USE_IMU) //判断是否使用IMU,该参数由参数配置文件.yaml决定
     {
+        //订阅IMU消息，ros::TransportHints().tcpNoDelay()被用于指定hints，确定传输层的作用话题的方式:无延迟的TCP传输方式
         sub_imu = n.subscribe(IMU_TOPIC, 2000, imu_callback, ros::TransportHints().tcpNoDelay());
     }
+    //订阅特征跟踪消息
     ros::Subscriber sub_feature = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
+    //订阅左目图像信息
     ros::Subscriber sub_img0 = n.subscribe(IMAGE0_TOPIC, 100, img0_callback);
     ros::Subscriber sub_img1;
-    if(STEREO)
+    if(STEREO) //判断是否使用双目
     {
         sub_img1 = n.subscribe(IMAGE1_TOPIC, 100, img1_callback);
     }
-    ros::Subscriber sub_restart = n.subscribe("/vins_restart", 100, restart_callback);
-    ros::Subscriber sub_imu_switch = n.subscribe("/vins_imu_switch", 100, imu_switch_callback);
-    ros::Subscriber sub_cam_switch = n.subscribe("/vins_cam_switch", 100, cam_switch_callback);
+    ros::Subscriber sub_restart = n.subscribe("/vins_restart", 100, restart_callback); //订阅重启Vins估计话题
+    ros::Subscriber sub_imu_switch = n.subscribe("/vins_imu_switch", 100, imu_switch_callback);  //订阅双目下情况IMU开关
+    ros::Subscriber sub_cam_switch = n.subscribe("/vins_cam_switch", 100, cam_switch_callback);  //订阅单双目切换话题
 
     std::thread sync_thread{sync_process};
     ros::spin();
