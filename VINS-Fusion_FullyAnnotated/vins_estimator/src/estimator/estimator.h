@@ -110,8 +110,8 @@ class Estimator
     MarginalizationFlag  marginalization_flag;
     Vector3d g;
 
-    Matrix3d ric[2];
-    Vector3d tic[2];
+    Matrix3d ric[2];//IMU到相机之间的旋转矩阵
+    Vector3d tic[2];//IMU到相机之间的平移矩阵
 
     Vector3d        Ps[(WINDOW_SIZE + 1)];
     Vector3d        Vs[(WINDOW_SIZE + 1)];
