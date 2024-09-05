@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/my/Workspace/Learn_vSLAM_OpenSource_Code/msckf_vio/build/devel/setup.sh

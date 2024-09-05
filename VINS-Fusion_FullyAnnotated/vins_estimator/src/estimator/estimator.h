@@ -63,7 +63,7 @@ class Estimator
     void slideWindowNew();
     void slideWindowOld();
     void optimization();
-    void vector2double();
+    void vector2double();//ceres是一种非线性优化库。而ceres在优化变量是必须基于double型的数组
     void double2vector();
     bool failureDetection();
     bool getIMUInterval(double t0, double t1, vector<pair<double, Eigen::Vector3d>> &accVector, 
