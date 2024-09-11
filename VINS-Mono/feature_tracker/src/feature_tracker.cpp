@@ -232,6 +232,7 @@ void FeatureTracker::readImage(const cv::Mat &_img, double _cur_time)
     cur_pts = forw_pts;
 
     // 11. 根据不同的相机模型去畸变矫正和转换到归一化坐标系上，计算速度
+    //这个函数干了2件事，第一个是获取forw时刻去畸变的归一化坐标(这个是要发布到rosmsg里的points数据)，另一个是获取forw时刻像素运动速度
     undistortedPoints();
     prev_time = cur_time;
 }
@@ -270,6 +271,7 @@ void FeatureTracker::rejectWithF()
         //这两幅图像之间的基础矩阵。基础矩阵在立体视觉、相机标定和3D重建等计算机视觉任务中非常重要。
         //通过使用 RANSAC 算法，它能够有效地过滤掉噪声和错误匹配点对，确保基础矩阵的准确性。
         //status 中的值为 1 表示对应的点对是内点，为 0 则表示是外点。
+        //函数传入的是归一化坐标，那么得到的是本质矩阵E，如果传入的是像素坐标，那么得到的是基础矩阵。
         cv::findFundamentalMat(un_cur_pts, un_forw_pts, cv::FM_RANSAC, F_THRESHOLD, 0.99, status);
         int size_a = cur_pts.size();
         // 3. 根据status删除一些特征点
@@ -373,7 +375,7 @@ void FeatureTracker::undistortedPoints()
         {
             if (ids[i] != -1) // 2.2 通过id判断不是最新的点
             {
-                std::map<int, cv::Point2f>::iterator it; // 地图的迭代器
+                std::map<int, cv::Point2f>::iterator it; // map的迭代器
                 it = prev_un_pts_map.find(ids[i]);       // 找到对应的id
 
                 if (it != prev_un_pts_map.end()) // 2.3 在地图中寻找是否出现过id判断是否最新点
@@ -391,7 +393,7 @@ void FeatureTracker::undistortedPoints()
             }
         }
     }
-    else // 如果地图是空的，速度是0
+    else // 如果prev_un_pts_map是空的，速度是0
     {
         for (unsigned int i = 0; i < cur_pts.size(); i++)
         {

@@ -19,5 +19,8 @@
         <param name="skip_cnt" type="int" value="0" />
         <param name="skip_dis" type="double" value="0" />
     </node>
+    <!-- visualization_shift_x和visualization_shift_y表示在进行位姿图优化后，对得到的位姿在x坐标和y坐标的偏移量（一般都设为0）；
+         skip_cnt在pose_graph_node的process()中，表示每隔skip_cnt个图像帧才进行一次处理；
+         skip_dis也在pose_graph_node的process()中，目的是将距上一帧的时间间隔超过SKIP_DIS的图像创建为位姿图中的关键帧。 -->
 
 </launch>

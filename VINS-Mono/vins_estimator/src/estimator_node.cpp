@@ -374,9 +374,10 @@ void process()
                 xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
                 image[feature_id].emplace_back(camera_id, xyz_uv_velocity);
             }
+            TicToc ms_s;
             // 处理图像特征，初始化，紧耦合的非线性优化(处理1帧特征点)
             estimator.processImage(image, img_msg->header);
-
+            std::cout <<"################### " <<ms_s.toc() << std::endl;
             double whole_t = t_s.toc();
             printStatistics(estimator, whole_t);
             std_msgs::Header header = img_msg->header;
